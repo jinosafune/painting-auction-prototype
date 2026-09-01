@@ -507,6 +507,19 @@ function checkSubmitEnabled(){
   document.getElementById(id).addEventListener("input", checkSubmitEnabled);
 });
 function submitArtwork(){
+  const payload = {
+    title: document.getElementById("f_title").value.trim(),
+    artist: document.getElementById("f_artist").value.trim(),
+    year: document.getElementById("f_year").value.trim(),
+    size_technique: document.getElementById("f_size").value.trim(),
+    start_price: document.getElementById("f_price").value.trim(),
+  };
+  fetch("https://formspree.io/f/xqpkprdv", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify(payload),
+  }).catch(err => console.error("Notification email failed to send:", err));
+
   document.getElementById("submitForm").style.display = "none";
   document.getElementById("submitSuccess").classList.add("show");
 }
