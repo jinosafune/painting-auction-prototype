@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CANVAS AUCTION | 絵画オークション</title>
+<meta name="description" content="鑑定済みの絵画作品だけを扱う、せり上がり式オークションサイト。" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#F5F2ED;
+    --paper-deep:#EDE8DE;
+    --wall:#1A1815;
+    --wine:#6B2635;
+    --wine-deep:#4E1B26;
+    --brass:#9C7A3C;
+    --ink:#1F1B17;
+    --ink-soft:#5C564D;
+    --line:#D9D2C4;
+    --white:#FFFFFF;
+    --display: 'Fraunces', Georgia, serif;
+    --body: 'Work Sans', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  img,svg{display:block;max-width:100%;}
+  button{font-family:var(--body);}
+
+  /* ---------- ヘッダー ---------- */
+  header.site{
+    position:sticky; top:0; z-index:50;
+    background:rgba(245,242,237,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    max-width:1120px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px;
+  }
+  .logo{
+    font-family:var(--display); font-size:19px; letter-spacing:.03em; color:var(--ink);
+    display:flex; align-items:center; gap:8px; cursor:pointer; border:none; background:none;
+  }
+  .logo-mark{width:14px;height:14px;background:var(--wine);border-radius:1px;flex-shrink:0;}
+  .nav-links{display:flex; gap:28px; align-items:center;}
+  .nav-links button{
+    border:none;background:none;font-size:13.5px;color:var(--ink-soft);cursor:pointer;padding:6px 0;
+  }
+  .nav-links button:hover{color:var(--ink);}
+  .nav-cta{
+    border:1px solid var(--wine)!important; color:var(--wine)!important;
+    padding:8px 16px!important; border-radius:2px;
+  }
+  .nav-cta:hover{background:var(--wine); color:var(--white)!important;}
+
+  /* ---------- ヒーロー ---------- */
+  .hero{
+    max-width:1120px; margin:0 auto;
+    padding:64px 24px 40px;
+    display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center;
+  }
+  .hero h1{
+    font-family:var(--display); font-weight:600;
+    font-size:clamp(32px,4.4vw,52px); line-height:1.12; margin:0 0 20px;
+    color:var(--ink);
+  }
+  .hero p.lead{
+    font-size:15.5px; color:var(--ink-soft); line-height:1.8; max-width:46ch; margin:0 0 28px;
+  }
+  .hero-ctas{display:flex; gap:14px; flex-wrap:wrap;}
+  .btn-primary{
+    background:var(--wine); color:var(--white); border:none; padding:13px 24px;
+    font-size:14px; font-weight:600; border-radius:2px; cursor:pointer; letter-spacing:.01em;
+  }
+  .btn-primary:hover{background:var(--wine-deep);}
+  .btn-ghost{
+    background:none; border:1px solid var(--line); color:var(--ink); padding:13px 22px;
+    font-size:14px; border-radius:2px; cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--ink);}
+  .hero-visual{
+    position:relative; aspect-ratio:4/5; border-radius:2px; overflow:hidden;
+    box-shadow:0 24px 48px rgba(26,24,21,0.18);
+  }
+  .hero-stats{
+    display:flex; gap:32px; margin-top:36px; padding-top:24px; border-top:1px solid var(--line);
+  }
+  .stat b{display:block; font-family:var(--display); font-size:24px; color:var(--wine);}
+  .stat span{font-size:11.5px; color:var(--ink-soft);}
+
+  /* ---------- セクション共通 ---------- */
+  section{max-width:1120px; margin:0 auto; padding:56px 24px;}
+  .section-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; gap:16px; flex-wrap:wrap;}
+  .section-head h2{font-family:var(--display); font-size:26px; margin:0; color:var(--ink);}
+  .section-head p{font-size:13px; color:var(--ink-soft); margin:6px 0 0;}
+
+  /* ---------- 出品作品グリッド ---------- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:20px;}
+  .card{
+    background:var(--white); border:1px solid var(--line); border-radius:2px; overflow:hidden;
+    cursor:pointer; transition:box-shadow .2s, transform .2s;
+  }
+  .card:hover{box-shadow:0 12px 28px rgba(26,24,21,0.12); transform:translateY(-2px);}
+  .card-img{aspect-ratio:5/4;}
+  .card-body{padding:14px 15px 16px;}
+  .card-title{font-family:var(--display); font-size:16.5px; color:var(--ink); margin:0 0 3px;}
+  .card-artist{font-size:12px; color:var(--ink-soft); margin:0 0 12px;}
+  .card-foot{display:flex; justify-content:space-between; align-items:flex-end;}
+  .card-price-label{font-size:10px; color:var(--ink-soft);}
+  .card-price{font-family:var(--display); font-size:17px; color:var(--wine);}
+  .badge{
+    font-size:10px; color:var(--brass); border:1px solid var(--brass); border-radius:20px; padding:2px 8px;
+    white-space:nowrap;
+  }
+
+  /* ---------- 特徴 ---------- */
+  .features{background:var(--paper-deep);}
+  .feat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:28px; margin-top:8px;}
+  .feat{padding:4px;}
+  .feat .num{font-family:var(--display); font-size:13px; color:var(--brass); margin-bottom:10px;}
+  .feat h3{font-family:var(--display); font-size:18px; margin:0 0 8px; color:var(--ink);}
+  .feat p{font-size:13px; color:var(--ink-soft); line-height:1.75; margin:0;}
+
+  /* ---------- 詳細/入札モーダル ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(26,24,21,0.55); z-index:100;
+    display:none; align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--paper); width:100%; max-width:920px; border-radius:3px; overflow:hidden;
+    display:grid; grid-template-columns:1fr 1fr;
+  }
+  .modal-close{
+    position:absolute; top:16px; right:16px; background:var(--white); border:none; width:32px; height:32px;
+    border-radius:50%; cursor:pointer; font-size:16px; color:var(--ink); z-index:2;
+  }
+  .modal-img{position:relative; aspect-ratio:auto; min-height:100%;}
+  .modal-info{padding:32px 30px; position:relative;}
+  .modal-info h2{font-family:var(--display); font-size:24px; margin:0 0 6px; color:var(--ink);}
+  .modal-meta{font-size:12.5px; color:var(--ink-soft); margin-bottom:2px;}
+  .modal-desc{font-size:13px; color:var(--ink-soft); line-height:1.75; margin:16px 0 20px;}
+  .bid-box{border:1px solid var(--line); background:var(--white); border-radius:3px; padding:16px; transition:background .4s;}
+  .bid-box.flash{background:#F1E7DA;}
+  .bid-row{display:flex; justify-content:space-between; align-items:baseline;}
+  .bid-label{font-size:11px; color:var(--ink-soft);}
+  .bid-timer{font-size:12px; font-weight:600; color:var(--wine);}
+  .bid-timer.ended{color:var(--ink-soft);}
+  .bid-current{font-family:var(--display); font-size:30px; color:var(--ink); margin:2px 0 14px;}
+  .bid-btn{
+    width:100%; padding:13px 0; background:var(--wine); color:var(--white); border:none; border-radius:2px;
+    font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .bid-btn:disabled{background:var(--line); color:var(--ink-soft); cursor:default;}
+  .bid-note{font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:8px;}
+  .history{margin-top:20px;}
+  .history h4{font-family:var(--display); font-size:14px; margin:0 0 8px; color:var(--ink);}
+  .history-row{display:flex; justify-content:space-between; font-size:12.5px; padding:8px 0; border-bottom:1px solid var(--line);}
+  .history-empty{font-size:12px; color:var(--ink-soft);}
+
+  /* ---------- 出品セクション ---------- */
+  .submit-wrap{
+    background:var(--wall); color:var(--white); border-radius:3px; padding:44px 40px;
+    display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start;
+  }
+  .submit-wrap h2{font-family:var(--display); font-size:26px; margin:0 0 14px; color:var(--white);}
+  .submit-wrap p{font-size:13.5px; color:#C9C2B4; line-height:1.8; margin:0 0 20px; max-width:40ch;}
+  .flow{display:flex; flex-direction:column; gap:14px;}
+  .flow-item{display:flex; gap:12px; align-items:flex-start;}
+  .flow-dot{width:6px;height:6px;border-radius:50%;background:var(--brass); margin-top:7px; flex-shrink:0;}
+  .flow-item span{font-size:13px; color:#E7E1D3; line-height:1.6;}
+  .field{margin-bottom:13px;}
+  .field label{display:block; font-size:11px; color:#C9C2B4; margin-bottom:5px;}
+  .field input{
+    width:100%; padding:10px 12px; border-radius:2px; border:1px solid #3A362F; background:#242019;
+    color:var(--white); font-size:13.5px;
+  }
+  .field input::placeholder{color:#78715F;}
+  .submit-btn{
+    width:100%; padding:13px 0; background:var(--brass); color:var(--wall); border:none; border-radius:2px;
+    font-size:14px; font-weight:700; cursor:pointer; margin-top:6px;
+  }
+  .submit-btn:disabled{background:#4A463C; color:#8A8577; cursor:default;}
+  .submit-success{display:none; text-align:center; padding:20px 0;}
+  .submit-success.show{display:block;}
+  .submit-success h3{font-family:var(--display); font-size:19px; color:var(--white); margin:0 0 10px;}
+  .submit-success p{font-size:13px; color:#C9C2B4; margin:0 auto 18px; max-width:36ch;}
+
+  footer{border-top:1px solid var(--line); padding:32px 24px; text-align:center;}
+  footer p{font-size:11.5px; color:var(--ink-soft); margin:0;}
+
+  @media (max-width:820px){
+    .hero{grid-template-columns:1fr; padding-top:40px;}
+    .hero-visual{order:-1; aspect-ratio:16/9;}
+    .feat-grid{grid-template-columns:1fr;}
+    .modal{grid-template-columns:1fr;}
+    .modal-img{aspect-ratio:4/3;}
+    .submit-wrap{grid-template-columns:1fr; padding:28px 22px;}
+    .nav-links{gap:16px;}
+    .nav-links span.desktop-only{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="nav">
+    <button class="logo" onclick="scrollToId('top')">
+      <span class="logo-mark"></span> CANVAS AUCTION
+    </button>
+    <div class="nav-links">
+      <button onclick="scrollToId('listings')">出品作品</button>
+      <button onclick="scrollToId('how')">仕組み</button>
+      <button class="nav-cta" onclick="scrollToId('submit')">出品する</button>
+    </div>
+  </div>
+</header>
+
+<div id="top"></div>
+<section class="hero">
+  <div>
+    <h1>鑑定を通過した絵画だけが、<br/>ここでせりにかけられる。</h1>
+    <p class="lead">
+      CANVAS AUCTIONは、提携鑑定業者による事前鑑定を通過した作品のみを扱う、
+      せり上がり式のオークションサイトです。作家・コレクター・個人、誰でも出品できます。
+    </p>
+    <div class="hero-ctas">
+      <button class="btn-primary" onclick="scrollToId('listings')">開催中のオークションを見る</button>
+      <button class="btn-ghost" onclick="scrollToId('submit')">作品を出品する</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><b id="statCount">-</b><span>開催中の出品作品</span></div>
+      <div class="stat"><b>100%</b><span>事前鑑定済み</span></div>
+      <div class="stat"><b>8%</b><span>出品者手数料</span></div>
+    </div>
+  </div>
+  <div class="hero-visual" id="heroVisual"></div>
+</section>
+
+<section class="features" id="how">
+  <div class="section-head">
+    <div>
+      <h2>仕組み</h2>
+      <p>出品から落札まで、3つのステップ</p>
+    </div>
+  </div>
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="num">01</div>
+      <h3>事前鑑定を申請</h3>
+      <p>作品情報と画像を登録し、提携鑑定業者へ鑑定を申請します。真贋・状態を確認したうえで掲載を承認します。</p>
+    </div>
+    <div class="feat">
+      <div class="num">02</div>
+      <h3>せり上がり式で入札</h3>
+      <p>開始価格からリアルタイムで価格が上がっていきます。終了間際の入札には自動延長が適用されます。</p>
+    </div>
+    <div class="feat">
+      <div class="num">03</div>
+      <h3>エスクロー決済で安心</h3>
+      <p>落札後の代金は一時的にお預かりし、作品の到着確認後に出品者へお支払いします。</p>
+    </div>
+  </div>
+</section>
+
+<section id="listings">
+  <div class="section-head">
+    <div>
+      <h2>開催中のオークション</h2>
+      <p>すべて事前鑑定を通過した作品です</p>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<section id="submit">
+  <div class="submit-wrap">
+    <div>
+      <h2>作品を出品する</h2>
+      <p>出品は無料です。鑑定業者の承認後、オークションページに掲載されます。</p>
+      <div class="flow">
+        <div class="flow-item"><span class="flow-dot"></span><span>作品情報・画像を登録して鑑定を申請</span></div>
+        <div class="flow-item"><span class="flow-dot"></span><span>提携鑑定業者が真贋・状態を確認</span></div>
+        <div class="flow-item"><span class="flow-dot"></span><span>承認後、開始価格でオークションが始まります</span></div>
+      </div>
+    </div>
+    <div>
+      <div id="submitForm">
+        <div class="field"><label>作品タイトル</label><input id="f_title" placeholder="例:遠い夏の記憶" /></div>
+        <div class="field"><label>作家名</label><input id="f_artist" placeholder="例:青柳 誠" /></div>
+        <div class="field"><label>制作年</label><input id="f_year" type="number" placeholder="例:2024" /></div>
+        <div class="field"><label>サイズ / 技法</label><input id="f_size" placeholder="例:F20(727×606mm)・油彩" /></div>
+        <div class="field"><label>開始価格(円)</label><input id="f_price" type="number" placeholder="例:100000" /></div>
+        <button class="submit-btn" id="submitBtn" onclick="submitArtwork()" disabled>鑑定を申請する</button>
+      </div>
+      <div class="submit-success" id="submitSuccess">
+        <h3>鑑定申請を受け付けました</h3>
+        <p>提携鑑定業者による確認後、3〜5営業日で結果をお知らせします。承認された作品はオークション一覧に掲載されます。</p>
+        <button class="btn-ghost" style="color:#fff;border-color:#4A463C;" onclick="resetSubmit()">もう一点、出品する</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>CANVAS AUCTION — これはプロトタイプサイトです。決済・鑑定業者連携・本人確認は実装されていません。</p>
+</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+const PAINTINGS = [
+  { id:1, title:"遠い夏の記憶", artist:"青柳 誠", year:2019, size:"F30(910×727mm)", technique:"油彩・キャンバス",
+    start:180000, palette:["#3B5B6E","#89A6A0","#E7CBA9"],
+    desc:"海辺の光を重ねた油彩画。作家の代表的なブルーの層が特徴です。" },
+  { id:2, title:"赤の断章 III", artist:"堂本 玲", year:2021, size:"F20(727×606mm)", technique:"アクリル・キャンバス",
+    start:95000, palette:["#6B2635","#C1543C","#2A1E1B"],
+    desc:"抽象表現の連作より。赤の濃淡だけで構成された一点です。" },
+  { id:3, title:"静物、午後三時", artist:"宇田川 螢", year:2016, size:"F8(455×380mm)", technique:"油彩・板",
+    start:62000, palette:["#9C7A3C","#E7DCC3","#4A3B26"],
+    desc:"光の差し込む窓辺を描いた小品。落ち着いた金褐色の階調です。" },
+  { id:4, title:"無題(層)", artist:"青柳 誠", year:2023, size:"F50(1167×910mm)", technique:"混合技法・キャンバス",
+    start:320000, palette:["#1A1815","#3B5B6E","#9C7A3C"],
+    desc:"大型作品。マチエールを重ねた作家の近作です。" },
+];
+
+const fmt = n => "¥" + n.toLocaleString("ja-JP");
+
+// 各作品の入札状態
+const state = {};
+PAINTINGS.forEach((p,i) => {
+  state[p.id] = {
+    current: p.start + (i===1 ? 8000 : 0),
+    secondsLeft: 3600*(2+i) + 90,
+    history: [],
+  };
+});
+
+function artworkSVG(p, tall){
+  const h = tall ? 420 : 200;
+  return `<svg viewBox="0 0 400 ${tall?500:320}" style="width:100%;height:${h}px;display:block;" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="g${p.id}${tall?'t':''}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${p.palette[0]}"/>
+      <stop offset="55%" stop-color="${p.palette[1]}"/>
+      <stop offset="100%" stop-color="${p.palette[2]}"/>
+    </linearGradient></defs>
+    <rect width="400" height="${tall?500:320}" fill="url(#g${p.id}${tall?'t':''})"/>
+    <rect width="400" height="${tall?500:320}" fill="none" stroke="rgba(255,255,255,0.15)"/>
+  </svg>`;
+}
+
+function scrollToId(id){
+  document.getElementById(id).scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function renderGrid(){
+  document.getElementById("statCount").textContent = PAINTINGS.length;
+  const grid = document.getElementById("grid");
+  grid.innerHTML = PAINTINGS.map(p => `
+    <div class="card" onclick="openModal(${p.id})">
+      <div class="card-img">${artworkSVG(p,false)}</div>
+      <div class="card-body">
+        <div class="card-title">${p.title}</div>
+        <div class="card-artist">${p.artist} / ${p.year}</div>
+        <div class="card-foot">
+          <div><div class="card-price-label">現在価格</div><div class="card-price" id="price-${p.id}">${fmt(state[p.id].current)}</div></div>
+          <div class="badge">鑑定済</div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+document.getElementById("heroVisual").innerHTML = artworkSVG(PAINTINGS[3], true);
+
+function fmtTime(s){
+  const h = String(Math.floor(s/3600)).padStart(2,"0");
+  const m = String(Math.floor((s%3600)/60)).padStart(2,"0");
+  const sec = String(s%60).padStart(2,"0");
+  return `${h}:${m}:${sec}`;
+}
+
+let openId = null;
+
+function openModal(id){
+  openId = id;
+  renderModal();
+  document.getElementById("overlay").classList.add("open");
+}
+function closeModal(){
+  document.getElementById("overlay").classList.remove("open");
+  openId = null;
+}
+
+function renderModal(){
+  const p = PAINTINGS.find(x => x.id === openId);
+  const s = state[p.id];
+  const ended = s.secondsLeft <= 0;
+  const step = Math.round((s.current*0.05)/500)*500 || 1000;
+
+  document.getElementById("modal").innerHTML = `
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-img">${artworkSVG(p, true)}</div>
+    <div class="modal-info">
+      <h2>${p.title}</h2>
+      <div class="modal-meta">${p.artist} / ${p.year}年 / ${p.technique}</div>
+      <div class="modal-meta">サイズ: ${p.size}</div>
+      <div class="modal-desc">${p.desc}</div>
+      <div class="bid-box" id="bidBox">
+        <div class="bid-row">
+          <span class="bid-label">現在の最高額</span>
+          <span class="bid-timer ${ended?'ended':''}" id="bidTimer">${ended ? "終了しました" : "残り " + fmtTime(s.secondsLeft)}</span>
+        </div>
+        <div class="bid-current" id="bidCurrent">${fmt(s.current)}</div>
+        <button class="bid-btn" id="bidBtn" ${ended?'disabled':''} onclick="placeBid(${p.id})">
+          ${ended ? "オークション終了" : fmt(s.current + step) + " で入札する"}
+        </button>
+        <div class="bid-note">入札は取り消せません。落札後はエスクロー決済に進みます。</div>
+      </div>
+      <div class="history">
+        <h4>入札履歴</h4>
+        <div id="historyList">${renderHistory(s)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHistory(s){
+  if(s.history.length === 0) return `<div class="history-empty">まだ入札はありません</div>`;
+  return s.history.map(h => `
+    <div class="history-row">
+      <span style="color:${h.who==='あなた' ? 'var(--wine)' : 'var(--ink-soft)'}">${h.who}</span>
+      <span style="color:var(--ink);font-weight:500;">${fmt(h.amount)}</span>
+    </div>
+  `).join("");
+}
+
+function placeBid(id){
+  const s = state[id];
+  const step = Math.round((s.current*0.05)/500)*500 || 1000;
+  s.current += step;
+  s.history.unshift({who:"あなた", amount:s.current});
+  s.history = s.history.slice(0,8);
+  flashBox();
+  if(openId === id) renderModal();
+  updateGridPrice(id);
+}
+
+function flashBox(){
+  const box = document.getElementById("bidBox");
+  if(!box) return;
+  box.classList.add("flash");
+  setTimeout(()=>box.classList.remove("flash"), 500);
+}
+
+function updateGridPrice(id){
+  const el = document.getElementById("price-"+id);
+  if(el) el.textContent = fmt(state[id].current);
+}
+
+// カウントダウン(全体を1秒ごとに進める)
+setInterval(() => {
+  PAINTINGS.forEach(p => {
+    if(state[p.id].secondsLeft > 0) state[p.id].secondsLeft--;
+  });
+  if(openId){
+    const s = state[openId];
+    const timerEl = document.getElementById("bidTimer");
+    if(timerEl){
+      const ended = s.secondsLeft <= 0;
+      timerEl.textContent = ended ? "終了しました" : "残り " + fmtTime(s.secondsLeft);
+      timerEl.classList.toggle("ended", ended);
+      if(ended){
+        const btn = document.getElementById("bidBtn");
+        if(btn){ btn.disabled = true; btn.textContent = "オークション終了"; }
+      }
+    }
+  }
+}, 1000);
+
+// 他の入札者によるライブ入札のシミュレーション
+setInterval(() => {
+  PAINTINGS.forEach(p => {
+    const s = state[p.id];
+    if(s.secondsLeft > 5 && Math.random() > 0.75){
+      const step = Math.round((s.current*0.02 + 1500)/500)*500;
+      s.current += step;
+      s.history.unshift({who:"他の入札者", amount:s.current});
+      s.history = s.history.slice(0,8);
+      updateGridPrice(p.id);
+      if(openId === p.id){ renderModal(); flashBox(); }
+    }
+  });
+}, 5000);
+
+// 出品フォーム
+function checkSubmitEnabled(){
+  const t = document.getElementById("f_title").value.trim();
+  const a = document.getElementById("f_artist").value.trim();
+  document.getElementById("submitBtn").disabled = !(t && a);
+}
+["f_title","f_artist"].forEach(id => {
+  document.getElementById(id).addEventListener("input", checkSubmitEnabled);
+});
+function submitArtwork(){
+  document.getElementById("submitForm").style.display = "none";
+  document.getElementById("submitSuccess").classList.add("show");
+}
+function resetSubmit(){
+  ["f_title","f_artist","f_year","f_size","f_price"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("submitForm").style.display = "block";
+  document.getElementById("submitSuccess").classList.remove("show");
+  checkSubmitEnabled();
+}
+
+document.getElementById("overlay").addEventListener("click", (e) => {
+  if(e.target.id === "overlay") closeModal();
+});
+
+renderGrid();
+</script>
+
+</body>
+</html>
