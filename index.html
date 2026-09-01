@@ -350,15 +350,7 @@ PAINTINGS.forEach((p,i) => {
 
 function artworkSVG(p, tall){
   const h = tall ? 420 : 200;
-  return `<svg viewBox="0 0 400 ${tall?500:320}" style="width:100%;height:${h}px;display:block;" preserveAspectRatio="xMidYMid slice">
-    <defs><linearGradient id="g${p.id}${tall?'t':''}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${p.palette[0]}"/>
-      <stop offset="55%" stop-color="${p.palette[1]}"/>
-      <stop offset="100%" stop-color="${p.palette[2]}"/>
-    </linearGradient></defs>
-    <rect width="400" height="${tall?500:320}" fill="url(#g${p.id}${tall?'t':''})"/>
-    <rect width="400" height="${tall?500:320}" fill="none" stroke="rgba(255,255,255,0.15)"/>
-  </svg>`;
+  return `<img src="images/${p.id}.jpg" alt="${p.title}" style="width:100%;height:${h}px;display:block;object-fit:cover;" />`;
 }
 
 function scrollToId(id){

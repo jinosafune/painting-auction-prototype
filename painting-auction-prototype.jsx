@@ -74,24 +74,13 @@ const fmt = (n) => `¥${n.toLocaleString("ja-JP")}`;
 // ---------------------------------------------------------------------------
 // 抽象「絵画」プレースホルダー
 // ---------------------------------------------------------------------------
-function ArtworkImage({ palette, id, tall }) {
-  const gid = `g${id}`;
+function ArtworkImage({ id, tall }) {
   return (
-    <svg
-      viewBox="0 0 400 320"
-      style={{ width: "100%", height: tall ? 260 : 150, display: "block", borderRadius: 2 }}
-      preserveAspectRatio="xMidYMid slice"
-    >
-      <defs>
-        <linearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={palette[0]} />
-          <stop offset="55%" stopColor={palette[1]} />
-          <stop offset="100%" stopColor={palette[2]} />
-        </linearGradient>
-      </defs>
-      <rect width="400" height="320" fill={gid ? `url(#${gid})` : palette[0]} />
-      <rect width="400" height="320" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-    </svg>
+    <img
+      src={`images/${id}.jpg`}
+      alt=""
+      style={{ width: "100%", height: tall ? 260 : 150, display: "block", borderRadius: 2, objectFit: "cover" }}
+    />
   );
 }
 
